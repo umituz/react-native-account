@@ -1,6 +1,6 @@
 {
   "name": "@umituz/react-native-account",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Account management for React Native apps - Delete account, update profile, manage user data",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -55,4 +55,3 @@
     "LICENSE"
   ]
 }
-
