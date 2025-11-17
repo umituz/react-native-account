@@ -36,7 +36,9 @@
   "peerDependencies": {
     "firebase": ">=11.0.0",
     "react": ">=18.2.0",
-    "react-native": ">=0.74.0"
+    "react-native": ">=0.74.0",
+    "@umituz/react-native-auth": ">=1.0.0",
+    "@umituz/react-native-logout": ">=1.0.0"
   },
   "devDependencies": {
     "firebase": "^11.10.0",

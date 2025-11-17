@@ -69,5 +69,9 @@ export {
 // =============================================================================
 
 export { useAccount } from "./presentation/hooks/useAccount";
-export type { UseAccountResult } from "./presentation/hooks/useAccount";
+export type {
+  UseAccountResult,
+  LogoutOptions,
+  LogoutResult,
+} from "./presentation/hooks/useAccount";
 
