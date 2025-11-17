@@ -34,6 +34,12 @@ export type {
   DeleteAccountConfig,
 } from "./domain/types/AccountTypes";
 
+export type {
+  UserProfile,
+  UserProfileConfig,
+  UserPreferences,
+} from "./domain/types/UserProfileTypes";
+
 // =============================================================================
 // APPLICATION LAYER - Ports
 // =============================================================================
@@ -50,6 +56,13 @@ export {
   getAccountService,
   resetAccountService,
 } from "./infrastructure/services/AccountService";
+
+export {
+  UserProfileService,
+  initializeUserProfileService,
+  getUserProfileService,
+  resetUserProfileService,
+} from "./infrastructure/services/UserProfileService";
 
 // =============================================================================
 // PRESENTATION LAYER - Hooks
