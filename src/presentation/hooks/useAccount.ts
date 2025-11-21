@@ -144,15 +144,21 @@ export function useAccount(): UseAccountResult {
 
         // Step 2: Clean storage (if logout service available)
         try {
-          const { logoutService } = await import("@umituz/react-native-logout");
-          const logoutResult = await logoutService.logout({
-            appId: options.appId,
-            storageKeys: options.storageKeys,
-            clearAllStorage: options.clearAllStorage,
-            callbacks: options.callbacks,
-          });
-          result.clearedKeys = logoutResult.clearedKeys;
-          result.errors.push(...logoutResult.errors);
+          // Dynamic import with type safety - package is optional peer dependency
+          // Use type assertion to avoid TypeScript errors when package is not installed
+          const logoutModule = await import("@umituz/react-native-logout" as string).catch(() => null) as any;
+          if (logoutModule?.logoutService) {
+            const logoutResult = await logoutModule.logoutService.logout({
+              appId: options.appId,
+              storageKeys: options.storageKeys,
+              clearAllStorage: options.clearAllStorage,
+              callbacks: options.callbacks,
+            });
+            result.clearedKeys = logoutResult.clearedKeys;
+            if (logoutResult.errors) {
+              result.errors.push(...logoutResult.errors);
+            }
+          }
         } catch (logoutError) {
           // Logout service not available - continue
           result.errors.push(
