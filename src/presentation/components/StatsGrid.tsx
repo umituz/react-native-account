@@ -10,7 +10,7 @@ import {
   AtomicIcon,
   useAppDesignTokens,
 } from "@umituz/react-native-design-system";
-import type { UserStats } from "../../../domain/types/UserStats";
+import type { UserStats } from "../../domain/types/UserStats";
 
 export interface StatsGridProps {
   stats: UserStats & { videosGenerated: number };

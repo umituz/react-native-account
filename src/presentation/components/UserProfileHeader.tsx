@@ -5,9 +5,13 @@
 
 import React from "react";
 import { View, TouchableOpacity, Image, StyleSheet } from "react-native";
-import { AtomicText, AtomicIcon, useAppDesignTokens } from "@umituz/react-native-design-system";
+import {
+  AtomicText,
+  AtomicIcon,
+  useAppDesignTokens,
+} from "@umituz/react-native-design-system";
 import { useNavigation } from "@react-navigation/native";
-import type { UserProfile } from "../../../domain/types/UserProfileTypes";
+import type { UserProfile } from "../../domain/types/UserProfileTypes";
 
 export interface UserProfileHeaderProps {
   userProfile: UserProfile;

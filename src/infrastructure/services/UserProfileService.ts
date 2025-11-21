@@ -1,23 +1,17 @@
 /**
  * User Profile Service Implementation
- * Firebase-based user profile and quota management
+ * Single Responsibility: User profile service initialization and coordination
  */
 
 import type { Firestore } from "firebase/firestore";
 import type { User } from "firebase/auth";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  updateDoc,
-  serverTimestamp,
-} from "firebase/firestore";
 import type {
   UserProfile,
   UserProfileConfig,
   UserPreferences,
 } from "../../domain/types/UserProfileTypes";
 import { AccountNotInitializedError } from "../../domain/errors/AccountError";
+import { UserProfileRepository } from "./UserProfileRepository";
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   theme: "system",
@@ -28,6 +22,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 export class UserProfileService {
   private firestore: Firestore | null = null;
   private config: UserProfileConfig | null = null;
+  private repository: UserProfileRepository | null = null;
 
   /**
    * Initialize user profile service with Firestore and configuration
@@ -38,67 +33,67 @@ export class UserProfileService {
     }
     this.firestore = firestore;
     this.config = config || {};
+    this.repository = new UserProfileRepository(
+      firestore,
+      this.getCollectionName()
+    );
   }
 
   /**
    * Check if service is initialized
    */
   isInitialized(): boolean {
-    return this.firestore !== null;
+    return this.firestore !== null && this.repository !== null;
   }
 
-  private getFirestore(): Firestore {
-    if (!this.firestore) {
+  private getRepository(): UserProfileRepository {
+    if (!this.repository) {
       throw new AccountNotInitializedError(
         "User profile service is not initialized. Call initialize() first."
       );
     }
-    return this.firestore;
+    return this.repository;
   }
 
   private getCollectionName(): string {
     return this.config?.collectionName || "users";
   }
 
+  private getDefaultPreferences(): UserPreferences {
+    return {
+      ...DEFAULT_PREFERENCES,
+      ...this.config?.defaultPreferences,
+    };
+  }
+
   /**
    * Load user profile from Firestore
    */
   async loadUserProfile(user: User): Promise<UserProfile | null> {
-    const db = this.getFirestore();
-    const collectionName = this.getCollectionName();
+    const repository = this.getRepository();
+    const profile = await repository.loadUserProfile(
+      user.uid,
+      this.getDefaultPreferences()
+    );
 
-    try {
-      const userRef = doc(db, collectionName, user.uid);
-      const userSnap = await getDoc(userRef);
+    if (profile) {
+      // Merge with user data from auth
+      const mergedProfile: UserProfile = {
+        ...profile,
+        email: profile.email || user.email || "",
+        displayName: profile.displayName || user.displayName || "",
+        photoURL: profile.photoURL || user.photoURL || null,
+        metadata: profile.metadata || this.config?.defaultMetadata || {},
+      };
 
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        const profile: UserProfile = {
-          uid: data.uid || user.uid,
-          email: data.email || user.email || "",
-          displayName: data.displayName || user.displayName || "",
-          photoURL: data.photoURL || user.photoURL || null,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          lastLoginAt: data.lastLoginAt?.toDate() || new Date(),
-          preferences: data.preferences || {
-            ...DEFAULT_PREFERENCES,
-            ...this.config?.defaultPreferences,
-          },
-          metadata: data.metadata || this.config?.defaultMetadata || {},
-        };
-
-        if (this.config?.onProfileLoaded) {
-          this.config.onProfileLoaded(profile);
-        }
-
-        return profile;
+      if (this.config?.onProfileLoaded) {
+        this.config.onProfileLoaded(mergedProfile);
       }
 
-      return null;
-    } catch (error) {
-      // Silent fail - profile loading is not critical
-      return null;
+      return mergedProfile;
     }
+
+    return null;
   }
 
   /**
@@ -108,8 +103,7 @@ export class UserProfileService {
     user: User,
     displayName?: string
   ): Promise<UserProfile> {
-    const db = this.getFirestore();
-    const collectionName = this.getCollectionName();
+    const repository = this.getRepository();
 
     const profile: UserProfile = {
       uid: user.uid,
@@ -118,20 +112,12 @@ export class UserProfileService {
       photoURL: user.photoURL || null,
       createdAt: new Date(),
       lastLoginAt: new Date(),
-      preferences: {
-        ...DEFAULT_PREFERENCES,
-        ...this.config?.defaultPreferences,
-      },
+      preferences: this.getDefaultPreferences(),
       metadata: this.config?.defaultMetadata || {},
     };
 
     try {
-      const userRef = doc(db, collectionName, user.uid);
-      await setDoc(userRef, {
-        ...profile,
-        createdAt: serverTimestamp(),
-        lastLoginAt: serverTimestamp(),
-      });
+      await repository.createUserProfile(profile);
 
       if (this.config?.onProfileCreated) {
         this.config.onProfileCreated(profile);
@@ -150,34 +136,16 @@ export class UserProfileService {
     userId: string,
     updates: Partial<UserProfile>
   ): Promise<void> {
-    const db = this.getFirestore();
-    const collectionName = this.getCollectionName();
-
-    try {
-      const userRef = doc(db, collectionName, userId);
-      await updateDoc(userRef, updates);
-
-      // Callback is handled by the store/hook
-    } catch (error) {
-      throw error;
-    }
+    const repository = this.getRepository();
+    await repository.updateUserProfile(userId, updates);
   }
 
   /**
    * Update last login timestamp
    */
   async updateLastLogin(userId: string): Promise<void> {
-    const db = this.getFirestore();
-    const collectionName = this.getCollectionName();
-
-    try {
-      const userRef = doc(db, collectionName, userId);
-      await updateDoc(userRef, {
-        lastLoginAt: serverTimestamp(),
-      });
-    } catch (error) {
-      // Silent fail - not critical
-    }
+    const repository = this.getRepository();
+    await repository.updateLastLogin(userId);
   }
 
 }

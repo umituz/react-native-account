@@ -1,12 +1,17 @@
 /**
  * useEditProfile Hook Factory
- * Single Responsibility: Form state and profile editing operations
+ * Single Responsibility: Profile editing operations coordination
  */
 
 import { useState, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useLocalization } from "@umituz/react-native-localization";
+import {
+  useEditProfileForm,
+  type EditProfileFormState,
+} from "./useEditProfileForm";
+import { useEditProfileImage } from "./useEditProfileImage";
 interface UseMediaReturn {
   pickImage?: (options?: {
     allowsEditing?: boolean;
@@ -63,11 +68,7 @@ interface UseEditProfileConfig {
   userProfileService: UserProfileService;
 }
 
-export interface EditProfileFormState {
-  displayName: string;
-  email: string;
-  photoURL: string | null;
-}
+export type { EditProfileFormState };
 
 export interface UseEditProfileReturn {
   formState: EditProfileFormState;
@@ -90,16 +91,24 @@ export function createUseEditProfile(
     const navigation = useNavigation();
     const { user, userId, isGuest } = useAuth();
     const media = useMedia();
-    const pickImage = media.pickImage || media.pickImageAsync;
 
-    const [formState, setFormState] = useState<EditProfileFormState>({
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+    const {
+      formState,
+      setDisplayName,
+      setEmail,
+      setPhotoURL,
+      resetForm,
+    } = useEditProfileForm({
       displayName: "",
       email: "",
       photoURL: null,
     });
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
+    const { handlePickImage } = useEditProfileImage(media, setPhotoURL);
 
     useEffect(() => {
       const loadProfile = async () => {
@@ -111,7 +120,7 @@ export function createUseEditProfile(
         const profile = await userProfileService.loadUserProfile(userId);
         if (profile) {
           setUserProfile(profile);
-          setFormState({
+          resetForm({
             displayName:
               profile.displayName ||
               user?.displayName ||
@@ -120,7 +129,7 @@ export function createUseEditProfile(
             photoURL: profile.photoURL || null,
           });
         } else {
-          setFormState({
+          resetForm({
             displayName:
               user?.displayName ||
               (isGuest ? `Guest ${userId.substring(0, 8)}` : ""),
@@ -132,36 +141,7 @@ export function createUseEditProfile(
       };
 
       loadProfile();
-    }, [userId, user, isGuest, userProfileService]);
-
-    const setDisplayName = useCallback((name: string) => {
-      setFormState((prev) => ({ ...prev, displayName: name }));
-    }, []);
-
-    const setEmail = useCallback((email: string) => {
-      setFormState((prev) => ({ ...prev, email }));
-    }, []);
-
-    const handlePickImage = useCallback(async () => {
-      if (!pickImage) {
-        Alert.alert(
-          t("common.error", "Error"),
-          t("editProfile.imagePickerNotAvailable", "Image picker is not available."),
-        );
-        return;
-      }
-
-      const result = await pickImage({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets[0]) {
-        const asset = result.assets[0];
-        setFormState((prev) => ({ ...prev, photoURL: asset.uri }));
-      }
-    }, [pickImage, t]);
+    }, [userId, user, isGuest, userProfileService, resetForm]);
 
     const handleSave = useCallback(async () => {
       if (!userId) {

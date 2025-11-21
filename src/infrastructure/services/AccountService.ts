@@ -1,30 +1,25 @@
 /**
  * Account Service Implementation
- * Firebase-based account management (delete account, update profile, etc.)
+ * Single Responsibility: Account service initialization and coordination
  */
 
-import {
-  deleteUser,
-  reauthenticateWithCredential,
-  EmailAuthProvider,
-  type Auth,
-} from "firebase/auth";
+import type { Auth } from "firebase/auth";
 import type { IAccountService } from "../../application/ports/IAccountService";
 import type {
   DeleteAccountResult,
   DeleteAccountConfig,
 } from "../../domain/types/AccountTypes";
-import {
-  AccountNotInitializedError,
-  AccountAuthRequiredError,
-  AccountReauthRequiredError,
-  AccountDeletionError,
-  AccountWrongPasswordError,
-} from "../../domain/errors/AccountError";
+import { AccountNotInitializedError } from "../../domain/errors/AccountError";
+import { AccountDeletionHandler } from "./AccountDeletionHandler";
 
 export class AccountService implements IAccountService {
   private auth: Auth | null = null;
   private config: DeleteAccountConfig | null = null;
+  private deletionHandler: AccountDeletionHandler;
+
+  constructor() {
+    this.deletionHandler = new AccountDeletionHandler();
+  }
 
   /**
    * Initialize account service with Firebase Auth and configuration
@@ -85,118 +80,13 @@ export class AccountService implements IAccountService {
       };
     }
 
-    // Validate user has email (required for reauthentication)
-    if (!auth.currentUser.email) {
-      return {
-        success: false,
-        error: {
-          message: "User email not found",
-          code: "EMAIL_NOT_FOUND",
-        },
-        requiresReauth: true,
-      };
-    }
-
     try {
-      // Step 0: Reauthenticate user (required by Firebase for sensitive operations)
-      try {
-        const credential = EmailAuthProvider.credential(
-          auth.currentUser.email,
-          password
-        );
-        await reauthenticateWithCredential(auth.currentUser, credential);
-      } catch (reauthError: any) {
-        // Handle reauthentication errors
-        if (config.onDeleteError) {
-          await config
-            .onDeleteError(
-              reauthError instanceof Error
-                ? reauthError
-                : new Error("Reauthentication failed"),
-              "AccountService.deleteAccount.reauthenticate"
-            )
-            .catch(() => {});
-        }
-
-        const isWrongPassword =
-          reauthError.code === "auth/wrong-password" ||
-          reauthError.code === "auth/invalid-credential";
-
-        return {
-          success: false,
-          error: {
-            message: isWrongPassword
-              ? "Incorrect password. Please try again."
-              : reauthError.message || "Reauthentication failed",
-            code: reauthError.code || "REAUTH_FAILED",
-          },
-          requiresReauth: true,
-        };
-      }
-
-      // Step 1: Delete all user data from database (app-specific callback)
-      try {
-        await config.onDeleteUserData(userId);
-      } catch (dataError: any) {
-        if (config.onDeleteError) {
-          await config
-            .onDeleteError(
-              dataError instanceof Error
-                ? dataError
-                : new Error("Failed to delete user data"),
-              "AccountService.deleteAccount.deleteUserData"
-            )
-            .catch(() => {});
-        }
-        throw new AccountDeletionError(
-          `Failed to delete user data: ${dataError.message || "Unknown error"}`
-        );
-      }
-
-      // Step 2: Clear local storage (app-specific callback)
-      try {
-        await config.onClearLocalStorage();
-      } catch (storageError: any) {
-        if (config.onDeleteError) {
-          await config
-            .onDeleteError(
-              storageError instanceof Error
-                ? storageError
-                : new Error("Failed to clear local storage"),
-              "AccountService.deleteAccount.clearLocalStorage"
-            )
-            .catch(() => {});
-        }
-        // Don't fail deletion if storage cleanup fails - continue to delete auth account
-      }
-
-      // Step 3: Delete Firebase Auth user account (must be last)
-      try {
-        await deleteUser(auth.currentUser);
-      } catch (authDeleteError: any) {
-        if (config.onDeleteError) {
-          await config
-            .onDeleteError(
-              authDeleteError instanceof Error
-                ? authDeleteError
-                : new Error("Failed to delete auth account"),
-              "AccountService.deleteAccount.deleteAuthAccount"
-            )
-            .catch(() => {});
-        }
-        throw new AccountDeletionError(
-          `Failed to delete auth account: ${authDeleteError.message || "Unknown error"}`
-        );
-      }
-
-      // Step 4: Call onAccountDeleted callback (optional)
-      if (config.onAccountDeleted) {
-        await config.onAccountDeleted(userId).catch(() => {
-          // Silent fail - callback errors should not fail the deletion
-        });
-      }
-
-      return { success: true };
+      return await this.deletionHandler.executeDeletion(
+        auth,
+        userId,
+        password,
+        config
+      );
     } catch (error: any) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
