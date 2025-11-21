@@ -8,7 +8,6 @@ export { ProfileLoadingState } from "./ProfileLoadingState";
 export { AccountSettingsHeader } from "./AccountSettingsHeader";
 export { ProfileSection } from "./ProfileSection";
 export { AccountActionsSection } from "./AccountActionsSection";
-export { AccountActions } from "./AccountActions";
 export { EditProfileHeader } from "./EditProfileHeader";
 export { AvatarSection } from "./AvatarSection";
 export { ProfileInputSection } from "./ProfileInputSection";
