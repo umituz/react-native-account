@@ -5,7 +5,7 @@
 
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { useAppDesignTokens } from "@umituz/react-native-design-system";
+import { useAppDesignTokens } from "@umituz/react-native-design-system-theme";
 
 export const ProfileLoadingState: React.FC = () => {
   const tokens = useAppDesignTokens();

@@ -8,7 +8,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Share as ShareIcon } from "lucide-react-native";
 import { useLocalization } from "@umituz/react-native-localization";
-import { useAppDesignTokens } from "@umituz/react-native-design-system";
+import { useAppDesignTokens } from "@umituz/react-native-design-system-theme";
 
 interface ProfileScreenHeaderProps {
   onBack: () => void;

@@ -7,7 +7,7 @@
 import React from "react";
 import { View, ScrollView, StatusBar, StyleSheet } from "react-native";
 import { useTheme } from "@umituz/react-native-design-system-theme";
-import { useAppDesignTokens } from "@umituz/react-native-design-system";
+import { useAppDesignTokens } from "@umituz/react-native-design-system-theme";
 import { ProfileScreenHeader } from "../components/ProfileScreenHeader";
 import { ProfileHeaderSection } from "../components/ProfileHeaderSection";
 import { ProfileLoadingState } from "../components/ProfileLoadingState";

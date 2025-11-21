@@ -7,7 +7,7 @@ import { useEffect, useCallback } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { Alert, Share as RNShare } from "react-native";
 import { useLocalization } from "@umituz/react-native-localization";
-import { useAppDesignTokens } from "@umituz/react-native-design-system";
+import { useAppDesignTokens } from "@umituz/react-native-design-system-theme";
 
 interface UserProfile {
   displayName?: string | null;

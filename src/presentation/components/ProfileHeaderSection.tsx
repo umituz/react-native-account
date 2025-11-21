@@ -6,7 +6,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { useLocalization } from "@umituz/react-native-localization";
-import { useAppDesignTokens } from "@umituz/react-native-design-system";
+import { useAppDesignTokens } from "@umituz/react-native-design-system-theme";
 
 interface ProfileHeaderSectionProps {
   displayName: string;
