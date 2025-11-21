@@ -23,7 +23,7 @@ interface UseProfileScreenConfig {
   };
   useAuthProfile: () => {
     userProfile: UserProfile | null;
-    refetchProfile: () => Promise<void>;
+    refetchProfile: (() => Promise<void>) | (() => Promise<any>) | (() => any);
   };
 }
 
@@ -54,7 +54,12 @@ export function createUseProfileScreen(
     useEffect(() => {
       const unsubscribe = navigation.addListener("focus", () => {
         if (userId) {
-          refetchProfile();
+          const result = refetchProfile();
+          if (result && typeof result.then === "function") {
+            result.catch(() => {
+              // Ignore errors
+            });
+          }
         }
       });
 

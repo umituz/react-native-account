@@ -8,7 +8,15 @@ import { Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useLocalization } from "@umituz/react-native-localization";
 interface UseMediaReturn {
-  pickImage: (options?: {
+  pickImage?: (options?: {
+    allowsEditing?: boolean;
+    aspect?: [number, number];
+    quality?: number;
+  }) => Promise<{
+    canceled: boolean;
+    assets?: Array<{ uri: string }>;
+  }>;
+  pickImageAsync?: (options?: {
     allowsEditing?: boolean;
     aspect?: [number, number];
     quality?: number;
@@ -27,7 +35,7 @@ interface UserProfile {
 
 interface UserProfileService {
   loadUserProfile: (userId: string) => Promise<UserProfile | null>;
-  createUserProfile: (
+  createUserProfile?: (
     userId: string,
     data: {
       email?: string;
@@ -81,7 +89,8 @@ export function createUseEditProfile(
     const { t } = useLocalization();
     const navigation = useNavigation();
     const { user, userId, isGuest } = useAuth();
-    const { pickImage } = useMedia();
+    const media = useMedia();
+    const pickImage = media.pickImage || media.pickImageAsync;
 
     const [formState, setFormState] = useState<EditProfileFormState>({
       displayName: "",
@@ -134,6 +143,14 @@ export function createUseEditProfile(
     }, []);
 
     const handlePickImage = useCallback(async () => {
+      if (!pickImage) {
+        Alert.alert(
+          t("common.error", "Error"),
+          t("editProfile.imagePickerNotAvailable", "Image picker is not available."),
+        );
+        return;
+      }
+
       const result = await pickImage({
         allowsEditing: true,
         aspect: [1, 1],
@@ -144,7 +161,7 @@ export function createUseEditProfile(
         const asset = result.assets[0];
         setFormState((prev) => ({ ...prev, photoURL: asset.uri }));
       }
-    }, [pickImage]);
+    }, [pickImage, t]);
 
     const handleSave = useCallback(async () => {
       if (!userId) {
@@ -171,7 +188,7 @@ export function createUseEditProfile(
       try {
         let profile = await userProfileService.loadUserProfile(userId);
 
-        if (!profile) {
+        if (!profile && userProfileService.createUserProfile) {
           await userProfileService.createUserProfile(userId, {
             email: formState.email.trim() || undefined,
             displayName: formState.displayName.trim() || null,

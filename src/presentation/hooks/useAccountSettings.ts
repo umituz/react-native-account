@@ -6,7 +6,13 @@
 import { useCallback } from "react";
 import { Alert } from "react-native";
 import { useLocalization } from "@umituz/react-native-localization";
-import type { UseAccountResult } from "./useAccount";
+interface UseAccountResult {
+  loading?: boolean;
+  error?: string | null;
+  logout: (options?: any) => Promise<any>;
+  deleteAccount: (userId: string, password: string) => Promise<any>;
+  clearError?: () => void;
+}
 
 interface UseAccountSettingsConfig {
   useAuth: () => {
