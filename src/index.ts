@@ -40,6 +40,8 @@ export type {
   UserPreferences,
 } from "./domain/types/UserProfileTypes";
 
+export type { UserStats } from "./domain/types/UserStats";
+
 // =============================================================================
 // APPLICATION LAYER - Ports
 // =============================================================================
@@ -74,4 +76,34 @@ export type {
   LogoutOptions,
   LogoutResult,
 } from "./presentation/hooks/useAccount";
+
+export {
+  createUseProfileScreen,
+  type UseProfileScreenReturn,
+} from "./presentation/hooks/useProfileScreen";
+
+export {
+  createUseAccountSettings,
+  type UseAccountSettingsReturn,
+} from "./presentation/hooks/useAccountSettings";
+
+export {
+  createUseEditProfile,
+  type UseEditProfileReturn,
+  type EditProfileFormState,
+} from "./presentation/hooks/useEditProfile";
+
+// =============================================================================
+// PRESENTATION LAYER - Screens
+// =============================================================================
+
+export { ProfileScreen } from "./presentation/screens/ProfileScreen";
+export { AccountSettingsScreen } from "./presentation/screens/AccountSettingsScreen";
+export { EditProfileScreen } from "./presentation/screens/EditProfileScreen";
+
+// =============================================================================
+// PRESENTATION LAYER - Components
+// =============================================================================
+
+export * from "./presentation/components";
 
