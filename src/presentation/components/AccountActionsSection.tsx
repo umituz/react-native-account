@@ -1,6 +1,7 @@
 /**
  * AccountActionsSection Component
  * Renders account actions (change password, logout, delete account)
+ * CRITICAL: Guest users should not see account actions
  */
 
 import React from "react";
@@ -11,18 +12,25 @@ import { SettingsSection } from "./SettingsSection";
 import { SettingItem } from "./SettingItem";
 
 interface AccountActionsSectionProps {
+  isGuest?: boolean;
   onLogout: () => void | Promise<void>;
   onDeleteAccount: () => void | Promise<void>;
   onChangePassword?: () => void;
 }
 
 export const AccountActionsSection: React.FC<AccountActionsSectionProps> = ({
+  isGuest = false,
   onLogout,
   onDeleteAccount,
   onChangePassword,
 }) => {
   const { t } = useLocalization();
   const navigation = useNavigation();
+
+  // CRITICAL: Guest users should not see account actions
+  if (isGuest) {
+    return null;
+  }
 
   const handleChangePassword = () => {
     if (onChangePassword) {

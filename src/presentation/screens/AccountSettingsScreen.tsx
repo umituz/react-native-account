@@ -46,6 +46,7 @@ export const AccountSettingsScreen: React.FC<AccountSettingsScreenProps> = ({
       >
         <ProfileSection isGuest={isGuest} />
         <AccountActionsSection
+          isGuest={isGuest}
           onLogout={onLogout}
           onDeleteAccount={onDeleteAccount}
           onChangePassword={onChangePassword}
