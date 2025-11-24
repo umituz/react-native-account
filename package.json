@@ -40,6 +40,7 @@
     "@umituz/react-native-design-system-theme": "latest",
     "@umituz/react-native-localization": "latest",
     "@umituz/react-native-logout": "latest",
+    "@umituz/react-native-appearance": "latest",
     "@umituz/react-native-media": "latest",
     "firebase": ">=11.0.0",
     "lucide-react-native": ">=0.300.0",
