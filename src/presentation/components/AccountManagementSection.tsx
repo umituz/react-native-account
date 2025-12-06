@@ -84,9 +84,8 @@ export const AccountManagementSection: React.FC<AccountManagementSectionProps> =
 
         <View style={styles.deleteLink}>
           <AtomicButton
-            variant="ghost"
+            variant="danger"
             size="sm"
-            color="error"
             onPress={handleDeleteAccount}
           >
             {t("account.deleteAccount.title")}
