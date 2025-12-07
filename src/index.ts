@@ -71,11 +71,7 @@ export {
 // =============================================================================
 
 export { useAccount } from "./presentation/hooks/useAccount";
-export type {
-  UseAccountResult,
-  LogoutOptions,
-  LogoutResult,
-} from "./presentation/hooks/useAccount";
+export type { UseAccountResult } from "./presentation/hooks/useAccount";
 
 export {
   createUseProfileScreen,
@@ -85,6 +81,7 @@ export {
 export {
   createUseAccountSettings,
   type UseAccountSettingsReturn,
+  type UseAccountSettingsConfig,
 } from "./presentation/hooks/useAccountSettings";
 
 export {

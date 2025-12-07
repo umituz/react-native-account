@@ -1,6 +1,6 @@
 {
   "name": "@umituz/react-native-account",
-  "version": "1.6.5",
+  "version": "1.8.0",
   "description": "Account management for React Native apps - Delete account, update profile, manage user data",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -35,11 +35,9 @@
   },
   "peerDependencies": {
     "@react-navigation/native": ">=6.0.0",
-    "@umituz/react-native-auth": "latest",
     "@umituz/react-native-design-system": "latest",
     "@umituz/react-native-design-system-theme": "latest",
     "@umituz/react-native-localization": "latest",
-    "@umituz/react-native-logout": "latest",
     "@umituz/react-native-appearance": "latest",
     "@umituz/react-native-media": "latest",
     "firebase": ">=11.0.0",
@@ -60,8 +58,6 @@
     "@umituz/react-native-design-system-theme": "latest",
     "@umituz/react-native-localization": "latest",
     "@umituz/react-native-media": "latest",
-    "@umituz/react-native-auth": "latest",
-    "@umituz/react-native-logout": "latest",
     "lucide-react-native": "^0.300.0",
     "typescript": "^5.9.3"
   },

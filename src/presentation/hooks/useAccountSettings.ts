@@ -6,79 +6,51 @@
 import { useCallback } from "react";
 import { Alert } from "react-native";
 import { useLocalization } from "@umituz/react-native-localization";
-interface UseAccountResult {
-  loading?: boolean;
-  error?: string | null;
-  logout: (options?: any) => Promise<any>;
-  deleteAccount: (userId: string, password: string) => Promise<any>;
-  clearError?: () => void;
-}
+import type {
+  UseAccountSettingsConfig,
+  UseAccountSettingsReturn,
+} from "./useAccountSettings.types";
 
-interface UseAccountSettingsConfig {
-  useAuth: () => {
-    user: { id: string } | null;
-    isGuest: boolean;
-  };
-  useAccount: () => UseAccountResult;
-  appId?: string;
-}
-
-export interface UseAccountSettingsReturn {
-  handleLogout: () => Promise<void>;
-  handleDeleteAccount: () => Promise<void>;
-}
+export type { UseAccountSettingsConfig, UseAccountSettingsReturn };
 
 export function createUseAccountSettings(
-  config: UseAccountSettingsConfig,
+  config: UseAccountSettingsConfig
 ): () => UseAccountSettingsReturn {
-  const { useAuth, useAccount, appId = "app" } = config;
+  const { useAuth, useAccount, onLogoutSuccess, onDeleteAccountSuccess } =
+    config;
 
   return function useAccountSettings(): UseAccountSettingsReturn {
     const { t } = useLocalization();
-    const { user, isGuest } = useAuth();
-    const { logout, deleteAccount } = useAccount();
+    const { user, isGuest, logout } = useAuth();
+    const { deleteAccount } = useAccount();
 
     const handleLogout = useCallback(async () => {
       Alert.alert(
         t("settings.logout.confirmTitle", "Log Out"),
-        t("settings.logout.confirmMessage", "Are you sure you want to log out?"),
+        t(
+          "settings.logout.confirmMessage",
+          "Are you sure you want to log out?"
+        ),
         [
-          {
-            text: t("common.cancel", "Cancel"),
-            style: "cancel",
-          },
+          { text: t("common.cancel", "Cancel"), style: "cancel" },
           {
             text: t("settings.logout.title", "Log Out"),
             style: "destructive",
             onPress: async () => {
               try {
-                const result = await logout({
-                  appId,
-                  clearAllStorage: true,
-                });
-                if (!result.success) {
-                  Alert.alert(
-                    t("common.error", "Error"),
-                    t(
-                      "settings.logout.error",
-                      "Failed to log out. Please try again.",
-                    ),
-                  );
-                }
-              } catch (error) {
+                await logout();
+                onLogoutSuccess?.();
+              } catch {
                 Alert.alert(
                   t("common.error", "Error"),
-                  t(
-                    "settings.logout.error",
-                    "Failed to log out. Please try again.",
-                  ),
+                  t("settings.logout.error", "Failed to log out.")
                 );
               }
             },
           },
-        ],
+        ]
       );
-    }, [logout, t, appId]);
+    }, [logout, t, onLogoutSuccess]);
 
     const handleDeleteAccount = useCallback(async () => {
       if (!user) return;
@@ -87,13 +59,10 @@ export function createUseAccountSettings(
         t("settings.deleteAccount.confirmTitle", "Delete Account"),
         t(
           "settings.deleteAccount.confirmMessage",
-          "This will permanently delete your account and all associated data. This action cannot be undone.",
+          "This will permanently delete your account. This action cannot be undone."
         ),
         [
-          {
-            text: t("common.cancel", "Cancel"),
-            style: "cancel",
-          },
+          { text: t("common.cancel", "Cancel"), style: "cancel" },
           {
             text: t("settings.deleteAccount.title", "Delete Account"),
             style: "destructive",
@@ -102,35 +71,26 @@ export function createUseAccountSettings(
                 const password = isGuest ? "" : "anonymous";
                 const result = await deleteAccount(user.id, password);
                 if (result.success) {
-                  // Account deletion successful
+                  onDeleteAccountSuccess?.();
                 } else {
                   Alert.alert(
                     t("common.error", "Error"),
                     result.error?.message ||
-                      t(
-                        "settings.deleteAccount.error",
-                        "Failed to delete account. Please try again.",
-                      ),
+                      t("settings.deleteAccount.error", "Failed to delete.")
                   );
                 }
-              } catch (error) {
+              } catch {
                 Alert.alert(
                   t("common.error", "Error"),
-                  t(
-                    "settings.deleteAccount.error",
-                    "Failed to delete account. Please try again.",
-                  ),
+                  t("settings.deleteAccount.error", "Failed to delete.")
                 );
               }
             },
           },
-        ],
+        ]
       );
-    }, [user, isGuest, deleteAccount, t]);
+    }, [user, isGuest, deleteAccount, t, onDeleteAccountSuccess]);
 
-    return {
-      handleLogout,
-      handleDeleteAccount,
-    };
+    return { handleLogout, handleDeleteAccount };
   };
 }
